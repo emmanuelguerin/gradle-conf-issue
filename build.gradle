@@ -1,0 +1,42 @@
+subprojects {
+    apply plugin: 'maven-publish'
+    apply plugin: 'java'
+    group = 'org.gradle.sample'
+    version = '1.0'
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+            }
+        }
+    }
+}
+
+project(':api') {
+    configurations {
+        spi
+    }
+    dependencies {
+        compile project(':shared')
+    }
+    task spiJar(type: Jar) {
+        baseName = 'api-spi'
+        from sourceSets.main.output
+        include('org/gradle/sample/api/**')
+        classifier = 'spi'
+    }
+    artifacts {
+        spi spiJar
+    }
+
+    publishing.publications.maven.artifact(spiJar)
+}
+
+project(':services:personService') {
+
+    dependencies {
+        compile project(':shared')
+        compile project(path: ':api', configuration: 'spi')
+        testCompile "junit:junit:4.12", project(':api')
+    }
+}
